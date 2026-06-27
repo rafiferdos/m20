@@ -11,7 +11,10 @@ const registerUserIntoDB = async (payload: IUserRegisterPayload) => {
 	})
 	if (user) throw new Error('User already exists')
 
-	const passwordHash = await bcrypt.hash(password, config.bcryptSaltRounds)
+	const passwordHash = await bcrypt.hash(
+		password,
+		Number(config.bcryptSaltRounds)
+	)
 
 	const newUser = await prisma.user.create({
 		data: {
