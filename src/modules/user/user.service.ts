@@ -28,7 +28,10 @@ const registerUserIntoDB = async (payload: IUserRegisterPayload) => {
 	})
 
 	const result = await prisma.user.findUnique({
-		where: { id: newUser.id, email: newUser.email || email },
+		where: {
+			id: newUser.id,
+			email: newUser.email || email
+		},
 		include: {
 			profile: true
 		},
