@@ -1,48 +1,48 @@
 {
-  "compilerOptions": {
-    /* Build output */
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "removeComments": false,
-    "incremental": true,
-    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+	"compilerOptions": {
+		/* Build output */
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"removeComments": false,
+		"incremental": true,
+		"tsBuildInfoFile": "./dist/.tsbuildinfo",
 
-    /* Module system */
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "target": "ES2023",
-    "lib": ["ES2023"],
-    "moduleDetection": "force",
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
+		/* Module system */
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"target": "ES2023",
+		"lib": ["ES2023"],
+		"moduleDetection": "force",
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"verbatimModuleSyntax": true,
+		"isolatedModules": true,
+		"noUncheckedSideEffectImports": true,
 
-    /* Strictness — full pack */
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noEmitOnError": true,
+		/* Strictness — full pack */
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": false,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitOverride": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noEmitOnError": true,
 
-    /* Sanity */
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "types": ["node"],
+		/* Sanity */
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"types": ["node"],
 
-    /* Path aliases (optional, set up if you want clean imports) */
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "generated/prisma"]
+		/* Path aliases (optional, set up if you want clean imports) */
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist", "generated/prisma"]
 }
