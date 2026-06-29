@@ -1,7 +1,7 @@
-import type { Request, Response } from 'express'
+import type { ILoginUser } from './auth.interface.js'
 
-const loginUserIntoDB = (req: Request, res: Response) => {
-  
+const loginUserIntoDB = (payload: ILoginUser) => {
+	const { email, password } = payload
 }
 
 export const AuthServices = {
