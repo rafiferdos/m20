@@ -1,11 +1,12 @@
 import type { Response } from 'express'
 
 /* -------------------------------------------------------------------------- */
-/*                                   STATUS                                   */
+/*                                 STATUS CODES                               */
 /* -------------------------------------------------------------------------- */
 
 type SuccessStatusCode = 200 | 201 | 202
 type NoContentStatusCode = 204
+
 type ErrorStatusCode =
 	| 400
 	| 401
@@ -24,36 +25,36 @@ type ErrorStatusCode =
 /*                                    META                                    */
 /* -------------------------------------------------------------------------- */
 
-type TMeta = {
+type TMeta = Readonly<{
 	page: number
 	limit: number
 	total: number
 	totalPages: number
-}
+}>
 
 /* -------------------------------------------------------------------------- */
 /*                                  PAYLOADS                                  */
 /* -------------------------------------------------------------------------- */
 
-type SuccessResponse<T> = {
+type SuccessResponse<T> = Readonly<{
 	statusCode: SuccessStatusCode
 	message?: string
 	data?: T | null
 	meta?: TMeta
 
 	errors?: never
-}
+}>
 
-type NoContentResponse = {
+type NoContentResponse = Readonly<{
 	statusCode: NoContentStatusCode
 
 	message?: never
 	data?: never
 	meta?: never
 	errors?: never
-}
+}>
 
-type ErrorResponse = {
+type ErrorResponse = Readonly<{
 	statusCode: ErrorStatusCode
 
 	message: string
@@ -61,7 +62,7 @@ type ErrorResponse = {
 
 	data?: never
 	meta?: never
-}
+}>
 
 type ResponsePayload<T> =
 	| SuccessResponse<T>
@@ -108,41 +109,48 @@ function sendResponse<T>(
 
 		case 200:
 		case 201:
-		case 202: {
-			const body: {
+		case 202:
+			res.status(payload.statusCode).json({
+				success: true,
+				message: payload.message ?? 'Success',
+				...(payload.data !== undefined
+					? { data: payload.data ?? null }
+					: {}),
+				...(payload.meta !== undefined
+					? { meta: payload.meta }
+					: {})
+			} satisfies {
 				success: true
 				message: string
 				data?: T | null
 				meta?: TMeta
-			} = {
-				success: true,
-				message: payload.message ?? 'Success'
-			}
-
-			if (payload.data !== undefined) {
-				body.data = payload.data ?? null
-			}
-
-			if (payload.meta !== undefined) {
-				body.meta = payload.meta
-			}
-
-			res.status(payload.statusCode).json(body)
+			})
 			return
-		}
 
-		default: {
-			const body = {
-				success: false as const,
+		case 400:
+		case 401:
+		case 403:
+		case 404:
+		case 405:
+		case 409:
+		case 410:
+		case 422:
+		case 429:
+		case 500:
+		case 502:
+		case 503:
+			res.status(payload.statusCode).json({
+				success: false,
 				message: payload.message,
-				...(payload.errors !== undefined && {
-					errors: payload.errors
-				})
-			}
-
-			res.status(payload.statusCode).json(body)
+				...(payload.errors !== undefined
+					? { errors: payload.errors }
+					: {})
+			} satisfies {
+				success: false
+				message: string
+				errors?: unknown
+			})
 			return
-		}
 	}
 }
 
