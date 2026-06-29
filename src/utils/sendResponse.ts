@@ -52,7 +52,7 @@ const isSuccessCode = (code: number): boolean => code >= 200 && code < 300
 /*     excess-property-checks the object literal against it.         */
 /* ------------------------------------------------------------------ */
 
-function sendResponse<T>(res: Response, payload: TSuccessResponse<T>): void
+function sendResponse<T = unknown>(res: Response, payload: TSuccessResponse<T>): void
 function sendResponse(res: Response, payload: TErrorResponse): void
 
 /* ------------------------------------------------------------------ */
@@ -61,15 +61,29 @@ function sendResponse(res: Response, payload: TErrorResponse): void
 /*     what callers see.                                              */
 /* ------------------------------------------------------------------ */
 
-function sendResponse<T>(res: Response, payload: TSuccessResponse<T> | TErrorResponse): void {
+function sendResponse<T = unknown>(res: Response, payload: TSuccessResponse<T> | TErrorResponse): void {
+	// Fail fast with a clear message instead of letting Express crash later
+	// with the cryptic "Cannot set headers after they are sent" error.
+	if (res.headersSent) {
+		throw new Error('sendResponse called after headers were already sent for this response')
+	}
+
 	const { statusCode, message } = payload
 	const success = isSuccessCode(statusCode)
 
-	// Single object literal — V8 builds this as one shape (hidden class)
-	// instead of incrementally mutating a Record, which is faster for
-	// JSON.stringify downstream and avoids megamorphic property writes.
 	if (success) {
 		const { data, meta } = payload as TSuccessResponse<T>
+
+		// 204 No Content MUST NOT carry a body — sending one here would
+		// violate HTTP semantics and confuse strict clients/proxies.
+		if (statusCode === 204) {
+			res.status(204).end()
+			return
+		}
+
+		// Single object literal — V8 builds this as one shape (hidden class)
+		// instead of incrementally mutating a Record, which is friendlier
+		// for JSON.stringify downstream than megamorphic property writes.
 		res.status(statusCode).json({
 			success: true,
 			message: message ?? 'Success',
