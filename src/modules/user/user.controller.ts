@@ -1,8 +1,8 @@
 import catchAsync from '@/utils/catchAsync.js'
+import sendResponse from '@/utils/sendResponse.js'
 import type { Request, Response } from 'express'
 import status from 'http-status'
 import { UserService } from './user.service.js'
-import sendResponse from '@/utils/sendResponse.js'
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
 	const payload = req.body
@@ -16,6 +16,9 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
+const getMyProfile = catchAsync(async (req: Request, res: Response) => {})
+
 export const UserController = {
-	register: registerUser
+	register: registerUser,
+	getMyProfile
 }
