@@ -1,86 +1,192 @@
-import type { SignOptions } from 'jsonwebtoken'
-import jwt from 'jsonwebtoken'
+import jwt, { type SignOptions } from 'jsonwebtoken'
 
-/* ------------------------------------------------------------------ */
-/*  1. REAL TYPES — pulled FROM the library, not guessed/cast.        */
-/*     `Expiry` is jsonwebtoken's own branded `StringValue | number`   */
-/*     type (it only accepts strings like "15m", "7d", "1h" — not     */
-/*     arbitrary strings). Config values from .env are plain `string`, */
-/*     which can NEVER satisfy a branded type — so we accept the      */
-/*     realistic input type below and validate+convert at one boundary.*/
-/* ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*                                    TYPES                                   */
+/* -------------------------------------------------------------------------- */
+
+type JwtObjectPayload = Record<string, unknown>
 
 type Expiry = SignOptions['expiresIn']
 type ExpiryInput = string | number
 
-// A JWT payload must be a plain key-value object — not an array, not a
-// class instance, not a primitive. This rejects all of those at compile time.
-type TJwtPayload = Record<string, unknown>
+type AuthTokenConfig = Readonly<{
+	access: {
+		secret: string
+		expiresIn: ExpiryInput
+	}
+	refresh: {
+		secret: string
+		expiresIn: ExpiryInput
+	}
+}>
 
-/* ------------------------------------------------------------------ */
-/*  2. THE ONLY CAST IN THIS FILE — validated, not blind.             */
-/*     Matches the `ms` package's accepted formats (what jsonwebtoken */
-/*     actually parses under the hood). A malformed .env value fails  */
-/*     LOUD and FAST at startup with a clear message, instead of      */
-/*     producing a cryptic library error or — worse — silently        */
-/*     signing a token with no expiry.                                */
-/* ------------------------------------------------------------------ */
+type JwtVerifyErrorKind = 'expired' | 'not-before' | 'invalid'
+
+type JwtVerifyError = Readonly<{
+	kind: JwtVerifyErrorKind
+	message: string
+	cause?: unknown
+}>
+
+type VerifyResult<T> =
+	| Readonly<{ ok: true; payload: T }>
+	| Readonly<{ ok: false; error: JwtVerifyError }>
+
+type AuthTokens = Readonly<{
+	accessToken: string
+	refreshToken: string
+}>
+
+/* -------------------------------------------------------------------------- */
+/*                               EXPIRY VALIDATION                            */
+/* -------------------------------------------------------------------------- */
 
 const EXPIRY_PATTERN =
 	/^\d+(\.\d+)?\s?(ms|s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|y|yr|yrs|year|years)$/i
 
-const toExpiry = (value: ExpiryInput): Expiry => {
-	if (typeof value === 'number') return value // jsonwebtoken treats a bare number as seconds
+const normalizeExpiry = (value: unknown): Expiry => {
+	if (value === undefined || value === null) {
+		throw new Error('JWT expiry is missing. Check your config/env value.')
+	}
 
-	if (!EXPIRY_PATTERN.test(value.trim())) {
+	if (typeof value === 'number') {
+		if (!Number.isFinite(value) || value <= 0) {
+			throw new Error(`Invalid JWT expiry "${value}". It must be a positive finite number of seconds.`)
+		}
+		return value
+	}
+
+	if (typeof value !== 'string') {
+		throw new Error(`Invalid JWT expiry type: ${typeof value}. Expected string or number.`)
+	}
+
+	const trimmed = value.trim()
+
+	if (!trimmed) {
+		throw new Error('Invalid JWT expiry. Empty string is not allowed.')
+	}
+
+	if (!EXPIRY_PATTERN.test(trimmed)) {
 		throw new Error(
-			`Invalid JWT expiry "${value}". Expected a format like "15m", "7d", "1h", or a plain number of seconds.`
+			`Invalid JWT expiry "${value}". Use values like "15m", "7d", "1h", or a plain number of seconds.`
 		)
 	}
 
-	return value as Expiry
+	return trimmed as Expiry
 }
 
-/* ------------------------------------------------------------------ */
-/*  3. LOW-LEVEL PRIMITIVE — one secret, one token. No async lie.     */
-/* ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*                                LOW-LEVEL API                               */
+/* -------------------------------------------------------------------------- */
 
-const createToken = (payload: TJwtPayload, secret: string, expiresIn: ExpiryInput): string => {
-	// jwt.sign() without a callback is SYNCHRONOUS — it blocks the event
-	// loop regardless of whether you `await` it. No `async`, no Promise,
-	// no needless microtask. This is honest about what the call actually costs.
-	return jwt.sign(payload, secret, { expiresIn: toExpiry(expiresIn) })
+export const createToken = (
+	payload: JwtObjectPayload,
+	secret: string,
+	expiresIn: ExpiryInput
+): string => {
+	return jwt.sign(payload, secret, {
+		expiresIn: normalizeExpiry(expiresIn)
+	})
 }
 
-const verifyToken = <T = TJwtPayload>(token: string, secret: string): T => {
-	// jwt.verify throws synchronously on invalid/expired/tampered tokens —
-	// callers are expected to catch this (e.g. in auth middleware), not us.
-	return jwt.verify(token, secret) as T
+export const verifyToken = <T extends JwtObjectPayload = JwtObjectPayload>(
+	token: string,
+	secret: string
+): T => {
+	const decoded = jwt.verify(token, secret)
+
+	if (typeof decoded === 'string') {
+		throw new Error('JWT payload must be an object payload, not a string.')
+	}
+
+	return decoded as T
 }
 
-/* ------------------------------------------------------------------ */
-/*  4. HIGH-LEVEL API — this is what call sites actually use.         */
-/*     Access + refresh secrets/expiries are passed as LABELED        */
-/*     objects, not positional args — so swapping access<->refresh    */
-/*     by mistake is structurally impossible, not just "unlikely".    */
-/* ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*                              SAFE / NON-THROW API                          */
+/* -------------------------------------------------------------------------- */
 
-type TAuthTokens = {
-	accessToken: string
-	refreshToken: string
+const toJwtVerifyError = (error: unknown): JwtVerifyError => {
+	if (error instanceof Error) {
+		switch (error.name) {
+			case 'TokenExpiredError':
+				return {
+					kind: 'expired',
+					message: error.message,
+					cause: error
+				}
+
+			case 'NotBeforeError':
+				return {
+					kind: 'not-before',
+					message: error.message,
+					cause: error
+				}
+
+			default:
+				return {
+					kind: 'invalid',
+					message: error.message || 'Invalid JWT.',
+					cause: error
+				}
+		}
+	}
+
+	return {
+		kind: 'invalid',
+		message: 'Invalid JWT.',
+		cause: error
+	}
 }
 
-const createAuthTokens = (
-	payload: TJwtPayload,
-	secrets: { access: string; refresh: string },
-	expiry: { access: ExpiryInput; refresh: ExpiryInput }
-): TAuthTokens => ({
-	accessToken: createToken(payload, secrets.access, expiry.access),
-	refreshToken: createToken(payload, secrets.refresh, expiry.refresh)
-})
+export const tryVerifyToken = <T extends JwtObjectPayload = JwtObjectPayload>(
+	token: string,
+	secret: string
+): VerifyResult<T> => {
+	try {
+		return {
+			ok: true,
+			payload: verifyToken<T>(token, secret)
+		}
+	} catch (error) {
+		return {
+			ok: false,
+			error: toJwtVerifyError(error)
+		}
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              AUTH TOKEN HELPER                             */
+/* -------------------------------------------------------------------------- */
+
+export const createAuthTokens = <T extends JwtObjectPayload = JwtObjectPayload>(
+	payload: T,
+	config: AuthTokenConfig
+): AuthTokens => {
+	return {
+		accessToken: createToken(
+			payload,
+			config.access.secret,
+			config.access.expiresIn
+		),
+		refreshToken: createToken(
+			payload,
+			config.refresh.secret,
+			config.refresh.expiresIn
+		)
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   EXPORTS                                  */
+/* -------------------------------------------------------------------------- */
 
 export const JwtUtils = {
 	createToken,
 	verifyToken,
+	tryVerifyToken,
 	createAuthTokens
-}
+} as const
+
+export default JwtUtils

@@ -26,11 +26,24 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
 		role: user.role
 	}
 
+	// const { accessToken, refreshToken } = JwtUtils.createAuthTokens(
+	// 	jwtPayload,
+	// 	{ access: config.jwtSecret, refresh: config.jwtRefreshSecret },
+	// 	{ access: config.jwtExpiresIn, refresh: config.jwtRefreshExpiresIn }
+	// )
 	const { accessToken, refreshToken } = JwtUtils.createAuthTokens(
-		jwtPayload,
-		{ access: config.jwtSecret, refresh: config.jwtRefreshSecret },
-		{ access: config.jwtExpiresIn, refresh: config.jwtRefreshExpiresIn }
-	)
+	jwtPayload,
+	{
+		access: {
+			secret: config.jwtSecret,
+			expiresIn: config.jwtExpiresIn
+		},
+		refresh: {
+			secret: config.jwtRefreshSecret,
+			expiresIn: config.jwtRefreshExpiresIn
+		}
+	}
+)
 
 	return {
 		accessToken,
