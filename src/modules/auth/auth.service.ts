@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import type { ILoginUser } from './auth.interface.js'
 import jwt, { type SignOptions } from 'jsonwebtoken'
 import config from '@/config/index.js'
+import { JwtUtils } from '@/utils/jwt.js'
 
 const loginUserIntoDB = async (payload: ILoginUser) => {
 	const { email, password } = payload
@@ -25,19 +26,15 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
 		email: user.email,
 		role: user.role
 	}
-	const accessToken = await jwt.sign(
+	const accessToken = JwtUtils.createToken(
 		jwtPayload,
 		config.jwtSecret,
-		{
-			expiresIn: config.jwtExpiresIn
-		} as SignOptions
+		config.jwtExpiresIn
 	)
-	const refreshToken = await jwt.sign(
+	const refreshToken = JwtUtils.createToken(
 		jwtPayload,
 		config.jwtRefreshSecret,
-		{
-			expiresIn: config.jwtRefreshExpiresIn
-		} as SignOptions
+		config.jwtRefreshExpiresIn
 	)
 
 	return {
