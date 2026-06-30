@@ -10,14 +10,10 @@ type Expiry = SignOptions['expiresIn']
 type ExpiryInput = string | number
 
 type AuthTokenConfig = Readonly<{
-	access: {
-		secret: string
-		expiresIn: ExpiryInput
-	}
-	refresh: {
-		secret: string
-		expiresIn: ExpiryInput
-	}
+	accessSecret: string
+	accessExpiresIn: ExpiryInput
+	refreshSecret: string
+	refreshExpiresIn: ExpiryInput
 }>
 
 type JwtVerifyErrorKind = 'expired' | 'not-before' | 'invalid'
@@ -165,16 +161,8 @@ export const createAuthTokens = <T extends JwtObjectPayload = JwtObjectPayload>(
 	config: AuthTokenConfig
 ): AuthTokens => {
 	return {
-		accessToken: createToken(
-			payload,
-			config.access.secret,
-			config.access.expiresIn
-		),
-		refreshToken: createToken(
-			payload,
-			config.refresh.secret,
-			config.refresh.expiresIn
-		)
+		accessToken: createToken(payload, config.accessSecret, config.accessExpiresIn),
+		refreshToken: createToken(payload, config.refreshSecret, config.refreshExpiresIn)
 	}
 }
 

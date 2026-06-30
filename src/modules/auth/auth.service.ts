@@ -26,24 +26,12 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
 		role: user.role
 	}
 
-	// const { accessToken, refreshToken } = JwtUtils.createAuthTokens(
-	// 	jwtPayload,
-	// 	{ access: config.jwtSecret, refresh: config.jwtRefreshSecret },
-	// 	{ access: config.jwtExpiresIn, refresh: config.jwtRefreshExpiresIn }
-	// )
-	const { accessToken, refreshToken } = JwtUtils.createAuthTokens(
-	jwtPayload,
-	{
-		access: {
-			secret: config.jwtSecret,
-			expiresIn: config.jwtExpiresIn
-		},
-		refresh: {
-			secret: config.jwtRefreshSecret,
-			expiresIn: config.jwtRefreshExpiresIn
-		}
-	}
-)
+	const { accessToken, refreshToken } = JwtUtils.createAuthTokens(jwtPayload, {
+		accessSecret: config.jwtSecret,
+		accessExpiresIn: config.jwtExpiresIn,
+		refreshSecret: config.jwtRefreshSecret,
+		refreshExpiresIn: config.jwtRefreshExpiresIn
+	})
 
 	return {
 		accessToken,
@@ -52,5 +40,5 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
 }
 
 export const AuthServices = {
-	login: loginUserIntoDB,
+	login: loginUserIntoDB
 }
