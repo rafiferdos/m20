@@ -29,9 +29,6 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
-const getUserProfile = catchAsync(async (req: Request, res: Response) => {})
-
 export const AuthControllers = {
 	login: loginUser,
-	getMyProfile: getUserProfile
 }

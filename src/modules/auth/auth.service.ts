@@ -38,11 +38,6 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
 	}
 }
 
-const getUserProfileFromDB = async (userId: string) => {
-
-}
-
 export const AuthServices = {
 	login: loginUserIntoDB,
-	getProfile: getUserProfileFromDB
 }

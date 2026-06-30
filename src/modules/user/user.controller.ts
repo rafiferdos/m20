@@ -9,11 +9,6 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
 
 	const result = await UserService.register(payload)
 
-	// res.status(status.OK).json({
-	// 	message: 'User registered successfully',
-	// 	data: result
-	// })
-
 	sendResponse(res, {
 		statusCode: status.OK,
 		message: 'User registered successfully',

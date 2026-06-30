@@ -28,12 +28,6 @@ const registerUserIntoDB = async (payload: IUserRegisterPayload) => {
 			}
 		}
 	})
-	// await prisma.profile.create({
-	// 	data: {
-	// 		userId: newUser.id,
-	// 		profilePhoto: profilePhoto || null
-	// 	}
-	// })
 
 	const result = await prisma.user.findUnique({
 		where: {
@@ -50,6 +44,11 @@ const registerUserIntoDB = async (payload: IUserRegisterPayload) => {
 	return result
 }
 
+const getMyProfileFromDB = async (userId: string) => {
+
+}
+
 export const UserService = {
-	register: registerUserIntoDB
+	register: registerUserIntoDB,
+	getMyProfile: getMyProfileFromDB
 }
