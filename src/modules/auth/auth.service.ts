@@ -1,9 +1,8 @@
+import config from '@/config/index.js'
 import { prisma } from '@/lib/prisma.js'
+import { JwtUtils } from '@/utils/jwt.js'
 import bcrypt from 'bcryptjs'
 import type { ILoginUser } from './auth.interface.js'
-import jwt, { type SignOptions } from 'jsonwebtoken'
-import config from '@/config/index.js'
-import { JwtUtils } from '@/utils/jwt.js'
 
 const loginUserIntoDB = async (payload: ILoginUser) => {
 	const { email, password } = payload
@@ -26,15 +25,11 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
 		email: user.email,
 		role: user.role
 	}
-	const accessToken = JwtUtils.createToken(
+
+	const { accessToken, refreshToken } = JwtUtils.createAuthTokens(
 		jwtPayload,
-		config.jwtSecret,
-		config.jwtExpiresIn
-	)
-	const refreshToken = JwtUtils.createToken(
-		jwtPayload,
-		config.jwtRefreshSecret,
-		config.jwtRefreshExpiresIn
+		{ access: config.jwtSecret, refresh: config.jwtRefreshSecret },
+		{ access: config.jwtExpiresIn, refresh: config.jwtRefreshExpiresIn }
 	)
 
 	return {
