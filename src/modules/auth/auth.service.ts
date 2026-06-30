@@ -14,7 +14,8 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
 	const isPasswordMatched = await bcrypt.compare(password, user.password)
 	if (!isPasswordMatched) throw new Error('Invalid password')
 
-	return user
+	const { password: _password, ...userWithoutPassword } = user
+	return userWithoutPassword
 }
 
 export const AuthServices = {
