@@ -39,12 +39,11 @@ type TAccessTokenPayload = {
 /* ------------------------------------------------------------------ */
 
 const extractToken = (req: Request): string | null => {
-	if (req.cookies?.accessToken) {
-		const result = JwtUtils.tryVerifyToken(
-			req.cookies.accessToken,
-			config.jwtSecret
-		)
-		if (result.ok) return req.cookies.accessToken as string
+	const cookie = req.cookies?.accessToken as string | undefined
+
+	if (cookie) {
+		const result = JwtUtils.tryVerifyToken(cookie, config.jwtSecret)
+		if (result.ok) return cookie
 	}
 
 	const authHeader = req.headers.authorization
