@@ -1,14 +1,15 @@
-
+import { Prisma } from '@/generated/prisma/client.js'
+import type { NextFunction, Request, Response } from 'express'
+import { isAppError } from './appError.js'
 
 /* ------------------------------------------------------------------ */
-/*  Global error handler — Express 5 signature (err is unknown).      */
-/*  Catches everything: AppError throws, unhandled Prisma errors,      */
-/*  Zod parse failures, and plain unexpected bugs.                    */
+/*  Global error handler — Express 5 compatible.                      */
+/*                                                                    */
+/*  IMPORTANT: res.status() is now typed as a `number` property in   */
+/*  Express 5's type definitions, not a callable method. We use       */
+/*  `res.statusCode = X` (inherited from Node's http.ServerResponse)  */
+/*  followed by `res.json(...)` — this is the correct Express 5 way. */
 /* ------------------------------------------------------------------ */
-
-import type { NextFunction } from "express"
-import { isAppError } from "./appError.js"
-import { Prisma } from "@/generated/prisma/client.js"
 
 const globalErrorHandler = (
 	err: unknown,
@@ -18,7 +19,8 @@ const globalErrorHandler = (
 ): void => {
 	// ── 1. Known operational error — safe to expose ─────────────────
 	if (isAppError(err)) {
-		res.status(err.statusCode).json({
+		res.statusCode = err.statusCode
+		res.json({
 			success: false,
 			message: err.message,
 			...(err.errors !== undefined && { errors: err.errors })
@@ -26,53 +28,47 @@ const globalErrorHandler = (
 		return
 	}
 
-	// ── 2. Zod validation error — parse + normalise ─────────────────
-	if (err instanceof ZodError) {
-		res.status(422).json({
+	// ── 2. Prisma unique constraint violation (P2002) ────────────────
+	if (
+		err instanceof Prisma.PrismaClientKnownRequestError &&
+		err.code === 'P2002'
+	) {
+		const field =
+			(err.meta?.target as string[] | undefined)?.join(', ') ?? 'field'
+		res.statusCode = 409
+		res.json({
 			success: false,
-			message: 'Validation failed',
-			errors: err.errors.map(e => ({
-				field: e.path.join('.'),
-				message: e.message
-			}))
+			message: `A record with this ${field} already exists.`
 		})
 		return
 	}
 
-	// ── 3. Prisma known request errors ──────────────────────────────
-	if (err instanceof Prisma.PrismaClientKnownRequestError) {
-		// P2002 = unique constraint violation
-		if (err.code === 'P2002') {
-			const field = (err.meta?.target as string[] | undefined)?.join(', ') ?? 'field'
-			res.status(409).json({
-				success: false,
-				message: `A record with this ${field} already exists.`
-			})
-			return
-		}
-
-		// P2025 = record not found (findUniqueOrThrow, updateOrThrow, etc.)
-		if (err.code === 'P2025') {
-			res.status(404).json({
-				success: false,
-				message: 'The requested record does not exist.'
-			})
-			return
-		}
+	// ── 3. Prisma record not found (P2025) ───────────────────────────
+	//    findUniqueOrThrow, updateOrThrow, deleteOrThrow all throw this.
+	if (
+		err instanceof Prisma.PrismaClientKnownRequestError &&
+		err.code === 'P2025'
+	) {
+		res.statusCode = 404
+		res.json({
+			success: false,
+			message: 'The requested record does not exist.'
+		})
+		return
 	}
 
 	// ── 4. Everything else — unexpected bug ─────────────────────────
-	//    NEVER expose internal details to the client in production.
-	//    Log the full error internally (swap console.error for your
-	//    logger — winston, pino, etc.)
-	console.error('[UNHANDLED ERROR]', err)
+	//    NEVER expose internals in production. Log the full error with
+	//    your logger (winston, pino…) — swap console.error when ready.
+	console.error(`[UNHANDLED ERROR] ${new Date().toISOString()}`, err)
 
-	res.status(500).json({
+	res.statusCode = 500
+	res.json({
 		success: false,
 		message:
-			process.env.NODE_ENV === 'development' && err instanceof Error
-				? err.message
-				: 'Something went wrong. Please try again later.'
+			process.env.NODE_ENV === 'development' && err instanceof Error ?
+				err.message
+			:	'Something went wrong. Please try again later.'
 	})
 }
 
