@@ -5,6 +5,7 @@ import express from 'express'
 import config from './config/index.js'
 import { AuthRoutes } from './modules/auth/auth.route.js'
 import { userRoutes } from './modules/user/user.route.js'
+import globalErrorHandler from './utils/globalErrorHandler.js'
 
 const app: Application = express()
 
@@ -28,5 +29,8 @@ app.use('/api/user', userRoutes)
 
 // auth routes
 app.use('/api/auth', AuthRoutes)
+
+// handle errors globally
+app.use(globalErrorHandler)
 
 export default app
