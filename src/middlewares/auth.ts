@@ -39,12 +39,16 @@ type TAccessTokenPayload = {
 /* ------------------------------------------------------------------ */
 
 const extractToken = (req: Request): string | null => {
-	if (req.cookies?.accessToken) return req.cookies.accessToken as string
+	if (req.cookies?.accessToken) {
+		const result = JwtUtils.tryVerifyToken(
+			req.cookies.accessToken,
+			config.jwtSecret
+		)
+		if (result.ok) return req.cookies.accessToken as string
+	}
 
 	const authHeader = req.headers.authorization
 	if (!authHeader) return null
-
-	// Accept both "Bearer <token>" and raw "<token>"
 	return authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
 }
 
