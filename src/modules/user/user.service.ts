@@ -1,4 +1,5 @@
 import config from '@/config/index.js'
+import type { Prisma } from '@/generated/prisma/client.js'
 import { prisma } from '@/lib/prisma.js'
 import bcrypt from 'bcryptjs'
 import type { IUser, IUserRegisterPayload } from './user.interface.js'
@@ -59,20 +60,36 @@ const getMyProfileFromDB = async (userId: string) => {
 
 const updateMyProfileInDB = async (userId: string, payload: Partial<IUser>) => {
 	const { name, email, profile } = payload
+
+	const updateData: Prisma.UserUpdateInput = {
+		name,
+		email
+	}
+
+	if (profile) {
+		const profileUpdate: Prisma.ProfileUpdateInput = {}
+
+		if (profile.profilePhoto !== undefined) {
+			profileUpdate.profilePhoto = profile.profilePhoto
+		}
+		if (profile.bio !== undefined) {
+			profileUpdate.bio = profile.bio
+		}
+
+		updateData.profile = { update: profileUpdate }
+	}
+
 	const updatedUser = await prisma.user.update({
 		where: { id: userId },
 		data: {
 			name,
 			email,
-			profile:
-				profile ?
-					{
-						update: {
-							profilePhoto: profile.profilePhoto,
-							bio: profile.bio
-						}
-					}
-				:	undefined
+			profile: {
+				update: {
+					profilePhoto: profile?.profilePhoto,
+					bio: profile?.bio
+				}
+			}
 		},
 		omit: {
 			password: true

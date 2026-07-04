@@ -14,7 +14,7 @@ export interface IUser {
 }
 
 type TActiveStatus = 'ACTIVE' | 'BLOCKED'
-type TUserRole = 'USER' | 'AUTHOR'
+type TUserRole = 'USER' | 'AUTHOR' | 'ADMIN'
 
 export interface IUserRegisterPayload {
 	name: string
