@@ -7,13 +7,22 @@ import JwtUtils from '@/utils/jwt.js'
 import type { NextFunction, Request, Response } from 'express'
 import status from 'http-status'
 
-type TVerifyResult<T> = { ok: true; data: T } | { ok: false; error: string }
+/* ------------------------------------------------------------------ */
+/*  Local mirror of VerifyResult from jwt.ts — inlined so auth.ts     */
+/*  has zero import coupling to jwt's internal types. Must stay in     */
+/*  sync with jwt.ts's VerifyResult shape manually.                   */
+/* ------------------------------------------------------------------ */
+
+type TVerifyResult<T> =
+	| Readonly<{ ok: true; payload: T }>
+	| Readonly<{
+			ok: false
+			error: { kind: 'expired' | 'not-before' | 'invalid'; message: string }
+	  }>
 
 /* ------------------------------------------------------------------ */
-/*  1. APP-SPECIFIC JWT PAYLOAD SHAPE                                 */
-/*     Not `JwtPayload` from jsonwebtoken — that has [key: string]:   */
-/*     any, so undefined fields pass through silently. This is the    */
-/*     exact shape we sign, so we own and control it entirely.        */
+/*  App-specific JWT payload — exact shape we sign, we own it.        */
+/*  Not JwtPayload from jsonwebtoken ([key: string]: any leaks).      */
 /* ------------------------------------------------------------------ */
 
 type TAccessTokenPayload = {
@@ -24,9 +33,9 @@ type TAccessTokenPayload = {
 }
 
 /* ------------------------------------------------------------------ */
-/*  2. TOKEN EXTRACTION — strict, no fallback loophole                */
-/*     Only two valid locations: httpOnly cookie OR Bearer header.    */
-/*     Raw Authorization without "Bearer " prefix → rejected.         */
+/*  Token extraction — strict, no fallback loophole.                  */
+/*  Cookie first (httpOnly = safer), then Bearer header.              */
+/*  Raw Authorization without "Bearer " prefix → null, not accepted.  */
 /* ------------------------------------------------------------------ */
 
 const extractToken = (req: Request): string | null => {
@@ -39,12 +48,26 @@ const extractToken = (req: Request): string | null => {
 }
 
 /* ------------------------------------------------------------------ */
-/*  3. AUTH MIDDLEWARE FACTORY                                         */
+/*  Human-readable messages per error kind — never expose raw JWT     */
+/*  library internals (e.g. "jwt expired") directly to the client.    */
+/* ------------------------------------------------------------------ */
+
+const TOKEN_ERROR_MESSAGES: Record<
+	'expired' | 'not-before' | 'invalid',
+	string
+> = {
+	expired: 'Your session has expired. Please log in again.',
+	'not-before': 'Token is not yet valid. Please try again shortly.',
+	invalid: 'Invalid token. Please log in again.'
+}
+
+/* ------------------------------------------------------------------ */
+/*  Auth middleware factory                                            */
 /*                                                                    */
 /*  Use case:                                                          */
-/*    router.get('/me', auth(), getMe)                                */
-/*    router.delete('/user', auth('ADMIN'), deleteUser)               */
-/*    router.post('/post', auth('ADMIN', 'MODERATOR'), createPost)    */
+/*    router.get('/me',      auth(),               getMe)             */
+/*    router.delete('/user', auth('ADMIN'),        deleteUser)        */
+/*    router.post('/post',   auth('ADMIN', 'MOD'), createPost)        */
 /* ------------------------------------------------------------------ */
 
 export const auth = (...roles: Role[]) =>
@@ -58,35 +81,34 @@ export const auth = (...roles: Role[]) =>
 			)
 
 		// ── Step 2: token valid? ────────────────────────────────────────
-		//    Explicit type annotation here because TypeScript resolves
-		//    generics on object-literal methods at definition time, not
-		//    call time — without this, `result` loses its discriminated
-		//    union shape and .ok / .data / .error become invisible.
-		const result: TVerifyResult<TAccessTokenPayload> = JwtUtils.verifyToken(
+		//    tryVerifyToken returns a Result — no try/catch noise here.
+		//    Explicit annotation because TypeScript resolves generics on
+		//    object-literal methods at definition time, not call time.
+		const result: TVerifyResult<TAccessTokenPayload> = JwtUtils.tryVerifyToken(
 			token,
 			config.jwtSecret
 		)
+
 		if (!result.ok)
 			throw new AppError(
 				status.UNAUTHORIZED,
-				`Invalid or expired token: ${result.error}`
+				TOKEN_ERROR_MESSAGES[result.error.kind]
 			)
 
-		const { id, role } = result.data
+		const { id, role } = result.payload
 
 		// ── Step 3: role allowed? ───────────────────────────────────────
-		//    Check BEFORE the DB query — rejects wrong-role requests
-		//    without paying for a round-trip.
+		//    Before DB — wrong role gets rejected without a round-trip.
 		if (roles.length && !roles.includes(role))
 			throw new AppError(
 				status.FORBIDDEN,
 				'You do not have permission to perform this action.'
 			)
 
-		// ── Step 4: user still exists + not blocked? ────────────────────
-		//    Query by `id` only — the sole guaranteed unique field.
-		//    name + role are NOT unique in Prisma; including them in
-		//    findUnique's where causes PrismaClientValidationError at runtime.
+		// ── Step 4: user exists + not blocked? ──────────────────────────
+		//    Query by id only — the sole guaranteed unique field.
+		//    Including name/role in findUnique where causes
+		//    PrismaClientValidationError at runtime (not unique fields).
 		const user = await prisma.user.findUnique({ where: { id } })
 
 		if (!user)
