@@ -6,6 +6,6 @@ import { UserController } from './user.controller.js'
 const router = Router()
 
 router.post('/register', UserController.register)
-router.get('/me', auth(Role.AUTHOR, Role.USER), UserController.getMyProfile)
+router.get('/me', auth(Role.AUTHOR, Role.USER, Role.ADMIN), UserController.getMyProfile)
 
 export const userRoutes: Router = router
