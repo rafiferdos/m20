@@ -17,7 +17,7 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
 })
 
 const getMyProfile = catchAsync(async (req: Request, res: Response) => {
-	const profile = await UserService.getMyProfile(req.user!.id)
+	const profile = await UserService.getProfile(req.user!.id)
 
 	sendResponse(res, {
 		statusCode: status.OK,
@@ -26,7 +26,21 @@ const getMyProfile = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
+const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
+	const userId = req.user?.id
+	const payload = req.body
+
+	const updatedProfile = await UserService.updateProfile(userId!, payload)
+
+	sendResponse(res, {
+		statusCode: status.OK,
+		message: 'User profile updated successfully',
+		data: updatedProfile
+	})
+})
+
 export const UserController = {
 	register: registerUser,
-	getMyProfile
+	getMyProfile,
+	updateProfile: updateMyProfile
 }
