@@ -42,9 +42,10 @@ const extractToken = (req: Request): string | null => {
 	if (req.cookies?.accessToken) return req.cookies.accessToken as string
 
 	const authHeader = req.headers.authorization
-	if (authHeader?.startsWith('Bearer ')) return authHeader.slice(7)
+	if (!authHeader) return null
 
-	return null
+	// Accept both "Bearer <token>" and raw "<token>"
+	return authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
 }
 
 /* ------------------------------------------------------------------ */
@@ -88,7 +89,7 @@ export const auth = (...roles: Role[]) =>
 			token,
 			config.jwtSecret
 		)
-		console.log("🚀 ~ auth ~ config.jwtSecret:", config.jwtSecret)
+		console.log('🚀 ~ auth ~ config.jwtSecret:', config.jwtSecret)
 
 		if (!result.ok)
 			throw new AppError(
