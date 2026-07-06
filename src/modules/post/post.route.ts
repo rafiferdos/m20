@@ -11,5 +11,6 @@ router.post(
 	PostController.create
 )
 router.get('/', PostController.getAll)
+router.get('/:postId', PostController.getOne)
 
 export const PostRoutes: Router = router
