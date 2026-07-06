@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { PostController } from './post.controller.js'
 
-const router: Router = Router()
+const router = Router()
 
 router.post('/posts', PostController.create)
 
-export default router
+export const PostRoutes: Router = router
