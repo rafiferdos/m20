@@ -11,6 +11,19 @@ const createPostIntoDB = async (payload: ICreatePost, userId: string) => {
 	return result
 }
 
+const getAllPostsFromDB = async () => {
+	const result = await prisma.post.findMany({
+		where: {
+			status: 'PUBLISHED'
+		},
+		orderBy: {
+			createdAt: 'desc'
+		}
+	})
+	return result
+}
+
 export const PostService = {
-	create: createPostIntoDB
+	create: createPostIntoDB,
+	getAll: getAllPostsFromDB
 }
