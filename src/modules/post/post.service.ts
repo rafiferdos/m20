@@ -18,7 +18,11 @@ const getAllPostsFromDB = async () => {
 		},
 		orderBy: {
 			createdAt: 'desc'
-		}
+    },
+    include: {
+      author: true,
+      comments: true
+    }
 	})
 	return result
 }
