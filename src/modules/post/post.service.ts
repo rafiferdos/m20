@@ -32,9 +32,28 @@ const getAllPostsFromDB = async () => {
 }
 
 const getOnePostFromDB = async (postId: string) => {
-	const result = await prisma.post.findUniqueOrThrow({
+	// const result = await prisma.post.findUniqueOrThrow({
+	// 	where: {
+	// 		id: postId
+	// 	},
+	// 	include: {
+	// 		author: {
+	// 			omit: {
+	// 				password: true
+	// 			}
+	// 		},
+	// 		comments: true
+	// 	}
+	// })
+
+	const getOnePostWithViewCount = await prisma.post.update({
 		where: {
 			id: postId
+		},
+		data: {
+			views: {
+				increment: 1
+			}
 		},
 		include: {
 			author: {
@@ -46,18 +65,7 @@ const getOnePostFromDB = async (postId: string) => {
 		}
 	})
 
-	const updatedViews = await prisma.post.update({
-		where: {
-			id: postId
-		},
-		data: {
-			views: {
-				increment: 1
-			}
-		}
-	})
-
-	return result
+	return getOnePostWithViewCount
 }
 
 export const PostService = {
