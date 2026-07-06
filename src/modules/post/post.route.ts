@@ -10,5 +10,6 @@ router.post(
 	auth(Role.ADMIN, Role.AUTHOR, Role.USER),
 	PostController.create
 )
+router.get('/', PostController.getAll)
 
 export const PostRoutes: Router = router
