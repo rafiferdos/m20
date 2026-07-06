@@ -12,6 +12,10 @@ router.post(
 )
 router.get('/', PostController.getAll)
 router.get('/:postId', PostController.getOne)
-router.get('/my-posts', auth(Role.USER), PostController.myPosts)
+router.get(
+	'/my-posts',
+	auth(Role.USER, Role.ADMIN, Role.AUTHOR),
+	PostController.myPosts
+)
 
 export const PostRoutes: Router = router

@@ -82,7 +82,12 @@ const getMyPostsFromDB = async (userId: string) => {
 					password: true
 				}
 			},
-			comments: true
+			comments: true,
+			_count: {
+				select: {
+					comments: true
+				}
+			}
 		}
 	})
 	return result
