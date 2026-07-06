@@ -45,6 +45,18 @@ const getOnePostFromDB = async (postId: string) => {
 			comments: true
 		}
 	})
+
+	const updatedViews = await prisma.post.update({
+		where: {
+			id: postId
+		},
+		data: {
+			views: {
+				increment: 1
+			}
+		}
+	})
+
 	return result
 }
 
