@@ -41,6 +41,19 @@ const getOnePost = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
+const getMyPosts = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id
+  if (!userId) throw new AppError(status.BAD_REQUEST, 'User ID is required to search for posts')
+
+  const result = await PostService.getMyPosts(userId as string)
+
+  sendResponse(res, {
+    statusCode: status.OK,
+    message: 'My posts retrieved successfully',
+    data: result
+  })
+})
+
 export const PostController = {
 	create: createPost,
 	getAll: getAllPosts,
