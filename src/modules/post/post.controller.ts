@@ -28,18 +28,18 @@ const getAllPosts = catchAsync(async (_req: Request, res: Response) => {
 })
 
 const getOnePost = catchAsync(async (req: Request, res: Response) => {
-  const postId = req.params.postId
-  const result = await PostService.getOne(postId)
+	const postId = req.params.postId
+	const result = await PostService.getOne(postId as string)
 
-  sendResponse(res, {
-    statusCode: status.OK,
-    message: 'Post retrieved successfully',
-    data: result
-  })
+	sendResponse(res, {
+		statusCode: status.OK,
+		message: 'Post retrieved successfully',
+		data: result
+	})
 })
 
 export const PostController = {
 	create: createPost,
-  getAll: getAllPosts,
-  getOne: getOnePost
+	getAll: getAllPosts,
+	getOne: getOnePost
 }
