@@ -1,6 +1,6 @@
 import catchAsync from '@/utils/catchAsync.js'
 import sendResponse from '@/utils/sendResponse.js'
-import type { Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 import status from 'http-status'
 import { AuthServices } from './auth.service.js'
 
@@ -29,6 +29,33 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
+const refreshToken = catchAsync(
+	async (req: Request, res: Response, next: NextFunction) => {
+		const { refreshToken } = req.cookies
+		if (!refreshToken) {
+			return res
+				.status(status.UNAUTHORIZED)
+				.json({ message: 'Refresh token not found' })
+		}
+
+		const { accessToken } = await AuthServices.refreshToken(refreshToken)
+
+		res.cookie('accessToken', accessToken, {
+			httpOnly: true,
+			secure: false, // Set to true in production when using HTTPS
+			sameSite: 'none',
+			maxAge: 15 * 60 * 1000 // 15 minutes
+		})
+
+		sendResponse(res, {
+			statusCode: status.OK,
+			message: 'Access token refreshed successfully',
+			data: { accessToken }
+		})
+	}
+)
+
 export const AuthControllers = {
 	login: loginUser,
+	refreshToken
 }
