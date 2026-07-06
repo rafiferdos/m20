@@ -1,3 +1,5 @@
+import type { PostStatus } from '@/generated/prisma/enums.js'
+
 export interface IPost {
 	id: string
 	title: string
@@ -10,10 +12,4 @@ export interface IPost {
 	authorId: string
 	createdAt: Date
 	updatedAt: Date
-}
-
-export enum PostStatus {
-	DRAFT = 'DRAFT',
-	PUBLISHED = 'PUBLISHED',
-	ARCHIVED = 'ARCHIVED'
 }
