@@ -3,6 +3,8 @@ import type { Prisma } from '@/generated/prisma/client.js'
 import { prisma } from '@/lib/prisma.js'
 import bcrypt from 'bcryptjs'
 import type { IUser, IUserRegisterPayload } from './user.interface.js'
+import { AppError } from '@/utils/appError.js'
+import status from 'http-status'
 
 const registerUserIntoDB = async (payload: IUserRegisterPayload) => {
 	const { name, email, password, profilePhoto } = payload
@@ -10,7 +12,7 @@ const registerUserIntoDB = async (payload: IUserRegisterPayload) => {
 	const user = await prisma.user.findUnique({
 		where: { email }
 	})
-	if (user) throw new Error('User already exists')
+	if (user) throw new AppError(status.CONFLICT, 'User with this email already exists')
 
 	const passwordHash = await bcrypt.hash(
 		password,
