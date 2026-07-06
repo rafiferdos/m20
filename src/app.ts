@@ -32,7 +32,7 @@ app.use('/api/user', userRoutes)
 app.use('/api/auth', AuthRoutes)
 
 // post routes
-app.use('/post', PostRoutes)
+app.use('/api/posts', PostRoutes)
 
 // handle errors globally
 app.use(globalErrorHandler)
