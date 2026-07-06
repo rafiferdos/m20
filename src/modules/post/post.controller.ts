@@ -55,6 +55,9 @@ const getMyPosts = catchAsync(async (req: Request, res: Response) => {
 
 	const result = await PostService.getMyPosts(userId as string)
 
+	if (!result || result.length === 0)
+		throw new AppError(status.NOT_FOUND, 'No posts found for this user')
+
 	sendResponse(res, {
 		statusCode: status.OK,
 		message: 'My posts retrieved successfully',
