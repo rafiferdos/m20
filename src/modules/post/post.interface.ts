@@ -13,3 +13,8 @@ export interface IPost {
 	createdAt: Date
 	updatedAt: Date
 }
+
+export type ICreatePost = Omit<
+	IPost,
+	'id' | 'createdAt' | 'updatedAt' | 'authorId' | 'views'
+>
