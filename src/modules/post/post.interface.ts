@@ -14,7 +14,11 @@ export interface IPost {
 	updatedAt: Date
 }
 
-export type ICreatePost = Omit<
+export interface ICreatePost extends Omit<
 	IPost,
 	'id' | 'createdAt' | 'updatedAt' | 'authorId' | 'views'
->
+> {}
+
+export interface IUpdatePost extends Partial<
+	Omit<IPost, 'id' | 'createdAt' | 'updatedAt' | 'authorId' | 'views'>
+> {}
