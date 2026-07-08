@@ -155,5 +155,6 @@ export const PostService = {
 	getAll: getAllPostsFromDB,
 	getOne: getOnePostFromDB,
 	getMyPosts: getMyPostsFromDB,
-	update: updatePostInDB
+	update: updatePostInDB,
+	delete: deletePostFromDB
 }
