@@ -130,6 +130,26 @@ const updatePostInDB = async (
 	return result
 }
 
+const deletePostFromDB = async (postId: string, authorId: string, isAdmin: boolean) => {
+	const post = await prisma.post.findUnique({
+		where: {
+			id: postId
+		}
+	})
+	if (!post) throw new AppError(status.NOT_FOUND, 'Post not found')
+	if (!isAdmin && post?.authorId !== authorId)
+		throw new AppError(
+			status.FORBIDDEN,
+			'You are not allowed to delete this post'
+		)
+	const result = await prisma.post.delete({
+		where: {
+			id: postId
+		}
+	})
+	return result
+}
+
 export const PostService = {
 	create: createPostIntoDB,
 	getAll: getAllPostsFromDB,

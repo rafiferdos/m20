@@ -85,6 +85,10 @@ const updatePost = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
+const deletePost = catchAsync(async (req: Request, res: Response) => {
+	
+})
+
 export const PostController = {
 	create: createPost,
 	getAll: getAllPosts,
