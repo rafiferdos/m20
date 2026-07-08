@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma.js'
-import type { ICreatePost } from './post.interface.js'
+import { AppError } from '@/utils/appError.js'
+import status from 'http-status'
+import type { ICreatePost, IUpdatePost } from './post.interface.js'
 
 const createPostIntoDB = async (payload: ICreatePost, userId: string) => {
 	const result = await prisma.post.create({
@@ -93,9 +95,45 @@ const getMyPostsFromDB = async (userId: string) => {
 	return result
 }
 
+const updatePostInDB = async (
+	postId: string,
+	payload: IUpdatePost,
+	authorId: string,
+	isAdmin: boolean
+) => {
+	const post = await prisma.post.findUnique({
+		where: {
+			id: postId
+		}
+	})
+	if (!isAdmin && post?.authorId !== authorId)
+		throw new AppError(
+			status.FORBIDDEN,
+			'You are not allowed to update this post'
+		)
+	const result = await prisma.post.update({
+		where: {
+			id: postId
+		},
+		data: {
+			...payload
+		},
+		include: {
+			author: {
+				omit: {
+					password: true
+				}
+			},
+			comments: true
+		}
+	})
+	return result
+}
+
 export const PostService = {
 	create: createPostIntoDB,
 	getAll: getAllPostsFromDB,
 	getOne: getOnePostFromDB,
-	getMyPosts: getMyPostsFromDB
+	getMyPosts: getMyPostsFromDB,
+	update: updatePostInDB
 }
