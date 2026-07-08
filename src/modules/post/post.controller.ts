@@ -90,12 +90,12 @@ const deletePost = catchAsync(async (req: Request, res: Response) => {
 	const isAdmin = req.user?.role === 'ADMIN'
 	const postId = req.params.postId
 
-	const result = await PostService.delete(postId as string, authorId as string, isAdmin)
+	await PostService.delete(postId as string, authorId as string, isAdmin)
 
 	sendResponse(res, {
 		statusCode: status.OK,
 		message: 'Post deleted successfully',
-		data: result
+		data: null
 	})
 })
 
