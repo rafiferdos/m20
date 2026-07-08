@@ -17,5 +17,6 @@ router.get(
 	PostController.myPosts
 )
 router.get('/:postId', PostController.getOne)
+router.patch('/:postId', auth(Role.ADMIN, Role.AUTHOR), PostController.update)
 
 export const PostRoutes: Router = router
