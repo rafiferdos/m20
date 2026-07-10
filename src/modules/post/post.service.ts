@@ -137,7 +137,7 @@ const getMyPostsFromDB = async (userId: string) => {
 	return result
 }
 
-const getPostStatsFromDB = async (userId: string, isAdmin: boolean) => {
+const getPostStatsFromDB = async () => {
 	const transactionResult = await prisma.$transaction(async (tx) => {
 		// Count total posts
 		const totalPosts = await tx.post.count()
@@ -156,6 +156,12 @@ const getPostStatsFromDB = async (userId: string, isAdmin: boolean) => {
 				status: PostStatus.ARCHIVED
 			}
 		})
+		const totalViews = await tx.post.aggregate({
+			_sum: {
+				views: true
+			}
+		})
+
 		const totalComments = await tx.comment.count()
 		const totalApprovedComments = await tx.comment.count({
 			where: {
@@ -172,6 +178,7 @@ const getPostStatsFromDB = async (userId: string, isAdmin: boolean) => {
 			totalPublishedPosts,
 			totalDraftPosts,
 			totalArchievedPosts,
+			totalViews,
 			totalComments,
 			totalApprovedComments,
 			totalRejectedComments
