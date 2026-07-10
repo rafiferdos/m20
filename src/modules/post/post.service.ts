@@ -1,8 +1,8 @@
+import { CommentStatus, PostStatus } from '@/generated/prisma/enums.js'
 import { prisma } from '@/lib/prisma.js'
 import { AppError } from '@/utils/appError.js'
 import status from 'http-status'
 import type { ICreatePost, IUpdatePost } from './post.interface.js'
-import { CommentStatus } from '@/generated/prisma/enums.js'
 
 const createPostIntoDB = async (payload: ICreatePost, userId: string) => {
 	const result = await prisma.post.create({
@@ -70,47 +70,45 @@ const getOnePostFromDB = async (postId: string) => {
 
 	// return getOnePostWithViewCount
 
-	const transactionResult = await prisma.$transaction(
-		async (tx) => {
-			await tx.post.update({
-				where: {
-					id: postId
-				},
-				data: {
-					views: {
-						increment: 1
-					}
+	const transactionResult = await prisma.$transaction(async (tx) => {
+		await tx.post.update({
+			where: {
+				id: postId
+			},
+			data: {
+				views: {
+					increment: 1
 				}
-			});
+			}
+		})
 
-			const post = await tx.post.findUniqueOrThrow({
-				where: {
-						id: postId
+		const post = await tx.post.findUniqueOrThrow({
+			where: {
+				id: postId
+			},
+			include: {
+				author: {
+					omit: {
+						password: true
+					}
 				},
-				include: {
-					author: {
-						omit: {
-							password: true
-						}
+				comments: {
+					where: {
+						status: CommentStatus.APPROVED
 					},
-					comments: {
-						where: {
-							status: CommentStatus.APPROVED
-						},
-						orderBy: {
-							createdAt: 'desc'
-						}
-					},
-					_count: {
-						select: {
-							comments: true
-						}
+					orderBy: {
+						createdAt: 'desc'
+					}
+				},
+				_count: {
+					select: {
+						comments: true
 					}
 				}
-			})
-			return post
-		}
-	)
+			}
+		})
+		return post
+	})
 	return transactionResult
 }
 
@@ -137,6 +135,49 @@ const getMyPostsFromDB = async (userId: string) => {
 		}
 	})
 	return result
+}
+
+const getPostStatsFromDB = async (userId: string, isAdmin: boolean) => {
+	const transactionResult = await prisma.$transaction(async (tx) => {
+		// Count total posts
+		const totalPosts = await tx.post.count()
+		const totalPublishedPosts = await tx.post.count({
+			where: {
+				status: PostStatus.PUBLISHED
+			}
+		})
+		const totalDraftPosts = await tx.post.count({
+			where: {
+				status: PostStatus.DRAFT
+			}
+		})
+		const totalArchievedPosts = await tx.post.count({
+			where: {
+				status: PostStatus.ARCHIVED
+			}
+		})
+		const totalComments = await tx.comment.count()
+		const totalApprovedComments = await tx.comment.count({
+			where: {
+				status: CommentStatus.APPROVED
+			}
+		})
+		const totalRejectedComments = await tx.comment.count({
+			where: {
+				status: CommentStatus.REJECTED
+			}
+		})
+		return {
+			totalPosts,
+			totalPublishedPosts,
+			totalDraftPosts,
+			totalArchievedPosts,
+			totalComments,
+			totalApprovedComments,
+			totalRejectedComments
+		}
+	})
+	return transactionResult
 }
 
 const updatePostInDB = async (
@@ -203,5 +244,6 @@ export const PostService = {
 	getOne: getOnePostFromDB,
 	getMyPosts: getMyPostsFromDB,
 	update: updatePostInDB,
-	delete: deletePostFromDB
+	delete: deletePostFromDB,
+	getStats: getPostStatsFromDB
 }
