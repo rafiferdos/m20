@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma.js'
 import { AppError } from '@/utils/appError.js'
 import status from 'http-status'
 import type { ICreatePost, IUpdatePost } from './post.interface.js'
+import { CommentStatus } from '@/generated/prisma/enums.js'
 
 const createPostIntoDB = async (payload: ICreatePost, userId: string) => {
 	const result = await prisma.post.create({
@@ -48,26 +49,69 @@ const getOnePostFromDB = async (postId: string) => {
 	// 	}
 	// })
 
-	const getOnePostWithViewCount = await prisma.post.update({
-		where: {
-			id: postId
-		},
-		data: {
-			views: {
-				increment: 1
-			}
-		},
-		include: {
-			author: {
-				omit: {
-					password: true
-				}
-			},
-			comments: true
-		}
-	})
+	// const getOnePostWithViewCount = await prisma.post.update({
+	// 	where: {
+	// 		id: postId
+	// 	},
+	// 	data: {
+	// 		views: {
+	// 			increment: 1
+	// 		}
+	// 	},
+	// 	include: {
+	// 		author: {
+	// 			omit: {
+	// 				password: true
+	// 			}
+	// 		},
+	// 		comments: true
+	// 	}
+	// })
 
-	return getOnePostWithViewCount
+	// return getOnePostWithViewCount
+
+	const transactionResult = await prisma.$transaction(
+		async (tx) => {
+			await tx.post.update({
+				where: {
+					id: postId
+				},
+				data: {
+					views: {
+						increment: 1
+					}
+				}
+			});
+
+			const post = await tx.post.findUniqueOrThrow({
+				where: {
+						id: postId
+				},
+				include: {
+					author: {
+						omit: {
+							password: true
+						}
+					},
+					comments: {
+						where: {
+							status: CommentStatus.APPROVED
+						},
+						orderBy: {
+							createdAt: 'desc'
+						}
+					},
+					_count: {
+						select: {
+							comments: true
+						}
+					}
+				}
+			})
+			return post
+		}
+	)
+	return transactionResult
 }
 
 const getMyPostsFromDB = async (userId: string) => {
