@@ -156,11 +156,12 @@ const getPostStatsFromDB = async () => {
 				status: PostStatus.ARCHIVED
 			}
 		})
-		const totalViews = await tx.post.aggregate({
+		const totalViewsCount = await tx.post.aggregate({
 			_sum: {
 				views: true
 			}
 		})
+		const totalViews = totalViewsCount._sum.views || 0
 
 		const totalComments = await tx.comment.count()
 		const totalApprovedComments = await tx.comment.count({
@@ -178,7 +179,7 @@ const getPostStatsFromDB = async () => {
 			totalPublishedPosts,
 			totalDraftPosts,
 			totalArchievedPosts,
-			totalViews,
+			totalViews: totalViews,
 			totalComments,
 			totalApprovedComments,
 			totalRejectedComments
