@@ -99,11 +99,16 @@ const deletePost = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
+const getPostStats = catchAsync(async (req: Request, res: Response) => {
+	
+})
+
 export const PostController = {
 	create: createPost,
 	getAll: getAllPosts,
 	getOne: getOnePost,
 	myPosts: getMyPosts,
 	update: updatePost,
-	delete: deletePost
+	delete: deletePost,
+	Stats: getPostStats
 }

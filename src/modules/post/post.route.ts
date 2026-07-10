@@ -16,6 +16,11 @@ router.get(
 	auth(Role.USER, Role.ADMIN, Role.AUTHOR),
 	PostController.myPosts
 )
+router.get(
+	'/get-post-stats',
+	auth(Role.ADMIN, Role.AUTHOR, Role.USER),
+	PostController.Stats
+)
 router.get('/:postId', PostController.getOne)
 router.patch(
 	'/:postId',
