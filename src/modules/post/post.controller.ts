@@ -100,7 +100,25 @@ const deletePost = catchAsync(async (req: Request, res: Response) => {
 })
 
 const getPostStats = catchAsync(async (req: Request, res: Response) => {
-	
+	const userId = req.user?.id
+	const isAdmin = req.user?.role === 'ADMIN'
+	if (!userId)
+		throw new AppError(
+			status.BAD_REQUEST,
+			'User ID is required to get post stats'
+		)
+	if (!isAdmin)
+		throw new AppError(
+			status.FORBIDDEN,
+			'You are not allowed to get post stats'
+		)
+	const result = await PostService.getStats()
+
+	sendResponse(res, {
+		statusCode: status.OK,
+		message: 'Post stats retrieved successfully',
+		data: result
+	})
 })
 
 export const PostController = {
