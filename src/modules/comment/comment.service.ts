@@ -7,13 +7,8 @@ const getCommentsByAuthorIdFromDB = async (authorId: string) => {
 		where: {
 			id: authorId
 		},
-		select: {
-			comments: {
-				select: {
-					id: true,
-					content: true
-				}
-			}
+		include: {
+			comments: true
 		}
 	})
 	if (!user) throw new AppError(status.NOT_FOUND, 'User not found')
