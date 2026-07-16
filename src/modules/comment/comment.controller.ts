@@ -27,7 +27,19 @@ const createComment = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
+const getAllByPostId = catchAsync(async (req: Request, res: Response) => {
+	const { postId } = req.params
+	const comments = await CommentService.getAllByPostId(postId as string)
+
+	sendResponse(res, {
+		statusCode: status.OK,
+		message: 'Comments retrieved successfully',
+		data: comments
+	})
+})
+
 export const CommentController = {
 	getAllByAuthorId,
-	create: createComment
+	create: createComment,
+	getAllByPostId
 }
