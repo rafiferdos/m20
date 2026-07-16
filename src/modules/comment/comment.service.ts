@@ -103,6 +103,9 @@ const moderateCommentInDB = async (
 	if (commentData.status === status.status)
 		throw new AppError(403, 'Comment already has the same status')
 
+	if (status.status !== 'APPROVED' && status.status !== 'REJECTED')
+		throw new AppError(400, 'Invalid comment status')
+
 	const result = await prisma.comment.update({
 		where: {
 			id: commentId
