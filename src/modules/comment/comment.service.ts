@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma.js'
+import type { ICommentCreate } from './comment.interface.js'
 
 const getCommentsByAuthorIdFromDB = async (authorId: string) => {
 	const user = await prisma.user.findUniqueOrThrow({
@@ -14,8 +15,19 @@ const getCommentsByAuthorIdFromDB = async (authorId: string) => {
 	return comments
 }
 
-const createComment = async (payload: Comment) => {
-  
+const createComment = async (payload: ICommentCreate) => {
+	await prisma.comment.findUniqueOrThrow({
+		where: {
+			id: payload.postId
+		}
+	})
+
+	const comment = await prisma.comment.create({
+		data: {
+			...payload,
+			authorId
+		}
+	})
 }
 
 export const CommentService = {
