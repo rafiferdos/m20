@@ -6,5 +6,6 @@ const router = Router()
 
 router.get('/author/:authorId', CommentController.getAllByAuthorId)
 router.post('/', auth(Role.USER, Role.ADMIN), CommentController.create)
+router.get('/post/:postId', CommentController.getAllByPostId)
 
 export const CommentRoutes: Router = router
