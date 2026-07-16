@@ -1,4 +1,5 @@
 import type { PostStatus } from '@/generated/prisma/enums.js'
+import type { PostWhereInput } from '@/generated/prisma/models.js'
 
 export interface IPost {
 	id: string
@@ -22,3 +23,11 @@ export interface ICreatePost extends Omit<
 export interface IUpdatePost extends Partial<
 	Omit<IPost, 'id' | 'createdAt' | 'updatedAt' | 'authorId' | 'views'>
 > {}
+
+export interface IPostQueryParams extends PostWhereInput {
+	searchTerm?: string
+	page?: number
+	limit?: number
+	sortBy?: string
+	sortOrder?: 'asc' | 'desc'
+}
