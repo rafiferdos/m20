@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma.js'
-import type { ICommentCreate } from './comment.interface.js'
+import type { ICommentCreate, ICommentUpdate } from './comment.interface.js'
 
 const getCommentsByAuthorIdFromDB = async (authorId: string) => {
 	const comments = await prisma.comment.findMany({
@@ -60,8 +60,19 @@ const getCommentsByPostIdFromDB = async (postId: string) => {
 	return comments
 }
 
+const updateCommentIntoDB = async (commentId: string, payload: ICommentUpdate) => {
+	const comment = await prisma.comment.update({
+		where: {
+			id: commentId
+		},
+		data: payload
+	})
+	return comment
+}
+
 export const CommentService = {
 	getAllByAuthorId: getCommentsByAuthorIdFromDB,
 	create: createComment,
+	update: updateCommentIntoDB,
 	getAllByPostId: getCommentsByPostIdFromDB
 }
