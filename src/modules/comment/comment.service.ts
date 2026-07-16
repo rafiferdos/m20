@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma.js'
+import { AppError } from '@/utils/appError.js'
 import type {
 	ICommentCreate,
 	ICommentStatusUpdate,
@@ -89,13 +90,24 @@ const moderateCommentInDB = async (
 	commentId: string,
 	status: ICommentStatusUpdate
 ) => {
+	const commentData = await prisma.comment.findUniqueOrThrow({
+		where: {
+			id: commentId
+		},
+		select: {
+			id: true,
+			status: true
+		}
+	})
+
+	if (commentData.status === status.status)
+		throw new AppError(403, 'Comment already has the same status')
+
 	const result = await prisma.comment.update({
 		where: {
 			id: commentId
 		},
-		data: {
-			status: status.status
-		}
+		data: status
 	})
 	return result
 }
