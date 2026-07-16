@@ -15,6 +15,19 @@ const getAllByAuthorId = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
+const createComment = catchAsync(async (req: Request, res: Response) => {
+	const { authorId } = req.params
+	const payload = req.body
+	const result = await CommentService.create(authorId as string, payload)
+
+	sendResponse(res, {
+		statusCode: status.OK,
+		message: 'Comment created',
+		data: result
+	})
+})
+
 export const CommentController = {
-	getAllByAuthorId
+	getAllByAuthorId,
+	create: createComment
 }
