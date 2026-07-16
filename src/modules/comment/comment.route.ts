@@ -1,8 +1,10 @@
+import { Role } from '@/generated/prisma/enums.js'
+import { auth } from '@/middlewares/auth.js'
 import { Router } from 'express'
 import { CommentController } from './comment.controller.js'
 const router = Router()
 
 router.get('/author/:authorId', CommentController.getAllByAuthorId)
-router.post('/', CommentController.create)
+router.post('/', auth(Role.USER, Role.ADMIN), CommentController.create)
 
 export const CommentRoutes: Router = router
