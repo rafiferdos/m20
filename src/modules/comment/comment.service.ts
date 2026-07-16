@@ -60,7 +60,10 @@ const getCommentsByPostIdFromDB = async (postId: string) => {
 	return comments
 }
 
-const updateCommentIntoDB = async (commentId: string, payload: ICommentUpdate) => {
+const updateCommentIntoDB = async (
+	commentId: string,
+	payload: ICommentUpdate
+) => {
 	const comment = await prisma.comment.update({
 		where: {
 			id: commentId
@@ -70,9 +73,18 @@ const updateCommentIntoDB = async (commentId: string, payload: ICommentUpdate) =
 	return comment
 }
 
+const deleteCommentFromDB = async (commentId: string) => {
+	await prisma.comment.delete({
+		where: {
+			id: commentId
+		}
+	})
+}
+
 export const CommentService = {
 	getAllByAuthorId: getCommentsByAuthorIdFromDB,
 	create: createComment,
 	update: updateCommentIntoDB,
+	delete: deleteCommentFromDB,
 	getAllByPostId: getCommentsByPostIdFromDB
 }
