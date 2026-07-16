@@ -46,8 +46,13 @@ const getAllPostsFromDB = async (query: IPostQueryParams) => {
 			]
 		},
 		orderBy: {
-			createdAt: 'desc'
+			[query.sortBy ? query.sortBy : 'createdAt']:
+				query.sortOrder ? query.sortOrder : 'desc'
 		},
+		take: query.limit ? Number(query.limit) : 10,
+		skip:
+			query.page && query.limit ? (query.page - 1) * Number(query.limit) : 0,
+
 		include: {
 			author: {
 				omit: {
