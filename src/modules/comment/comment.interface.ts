@@ -8,3 +8,4 @@ export interface IComment {
 }
 
 export interface ICommentCreate extends Omit<IComment, 'status'> {}
+export interface ICommentUpdate extends Partial<IComment> {}
