@@ -7,4 +7,4 @@ export interface IComment {
 	status?: CommentStatus
 }
 
-export interface ICommentCreate extends Omit<IComment, 'authorId' | 'status'> { }
+export interface ICommentCreate extends Omit<IComment, 'status'> {}
