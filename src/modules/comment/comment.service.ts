@@ -14,6 +14,10 @@ const getCommentsByAuthorIdFromDB = async (authorId: string) => {
 	return comments
 }
 
+const createComment = async (payload: Comment) => {
+  
+}
+
 export const CommentService = {
 	getAllByAuthorId: getCommentsByAuthorIdFromDB
 }
