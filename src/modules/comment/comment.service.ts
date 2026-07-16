@@ -20,7 +20,7 @@ const getCommentsByAuthorIdFromDB = async (authorId: string) => {
 }
 
 const createComment = async (authorId: string, payload: ICommentCreate) => {
-	await prisma.comment.findUniqueOrThrow({
+	await prisma.post.findUniqueOrThrow({
 		where: {
 			id: payload.postId
 		}
