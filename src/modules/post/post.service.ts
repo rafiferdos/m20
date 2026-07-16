@@ -32,7 +32,9 @@ const getAllPostsFromDB = async (query: IPostQueryParams) => {
 								title: {
 									contains: query.searchTerm,
 									mode: 'insensitive'
-								},
+								}
+							},
+							{
 								content: {
 									contains: query.searchTerm,
 									mode: 'insensitive'
