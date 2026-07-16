@@ -2,7 +2,11 @@ import { CommentStatus, PostStatus } from '@/generated/prisma/enums.js'
 import { prisma } from '@/lib/prisma.js'
 import { AppError } from '@/utils/appError.js'
 import status from 'http-status'
-import type { ICreatePost, IUpdatePost } from './post.interface.js'
+import type {
+	ICreatePost,
+	IPostQueryParams,
+	IUpdatePost
+} from './post.interface.js'
 
 const createPostIntoDB = async (payload: ICreatePost, userId: string) => {
 	const result = await prisma.post.create({
@@ -14,10 +18,30 @@ const createPostIntoDB = async (payload: ICreatePost, userId: string) => {
 	return result
 }
 
-const getAllPostsFromDB = async () => {
+const getAllPostsFromDB = async (query: IPostQueryParams) => {
 	const result = await prisma.post.findMany({
 		where: {
-			status: 'PUBLISHED'
+			AND: [
+				query.title ? { title: query.title } : {},
+				query.content ? { content: query.content } : {},
+				query.status ? { status: query.status } : {},
+				query.searchTerm ?
+					{
+						OR: [
+							{
+								title: {
+									contains: query.searchTerm,
+									mode: 'insensitive'
+								},
+								content: {
+									contains: query.searchTerm,
+									mode: 'insensitive'
+								}
+							}
+						]
+					}
+				:	{}
+			]
 		},
 		orderBy: {
 			createdAt: 'desc'
