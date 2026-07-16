@@ -38,8 +38,21 @@ const getAllByPostId = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
+const updateComment = catchAsync(async (req: Request, res: Response) => {
+	const { commentId } = req.params
+	const payload = req.body
+	const result = await CommentService.update(commentId as string, payload)
+
+	sendResponse(res, {
+		statusCode: status.OK,
+		message: 'Comment updated',
+		data: result
+	})
+})
+
 export const CommentController = {
 	getAllByAuthorId,
 	create: createComment,
-	getAllByPostId
+	getAllByPostId,
+	update: updateComment
 }
