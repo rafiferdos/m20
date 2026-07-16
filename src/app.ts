@@ -4,6 +4,7 @@ import type { Application, Request, Response } from 'express'
 import express from 'express'
 import config from './config/index.js'
 import { AuthRoutes } from './modules/auth/auth.route.js'
+import { CheckerRoute } from './modules/checker/checker.route.js'
 import { CommentRoutes } from './modules/comment/comment.route.js'
 import { PostRoutes } from './modules/post/post.route.js'
 import { userRoutes } from './modules/user/user.route.js'
@@ -37,6 +38,9 @@ app.use('/api/posts', PostRoutes)
 
 // comment routes
 app.use('/api/comments', CommentRoutes)
+
+// checker routes
+app.use('/api/checker', CheckerRoute)
 
 // handle errors globally
 app.use(globalErrorHandler)
