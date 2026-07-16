@@ -50,9 +50,20 @@ const updateComment = catchAsync(async (req: Request, res: Response) => {
 	})
 })
 
+const deleteComment = catchAsync(async (req: Request, res: Response) => {
+	const { commentId } = req.params
+	await CommentService.delete(commentId as string)
+
+	sendResponse(res, {
+		statusCode: status.OK,
+		message: 'Comment deleted'
+	})
+})
+
 export const CommentController = {
 	getAllByAuthorId,
 	create: createComment,
+	delete: deleteComment,
 	getAllByPostId,
 	update: updateComment
 }
