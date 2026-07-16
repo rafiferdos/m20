@@ -22,3 +22,7 @@ export interface IUserRegisterPayload {
 	password: string
 	profilePhoto?: string
 }
+
+export interface IUserRole {
+	role: TUserRole
+}
