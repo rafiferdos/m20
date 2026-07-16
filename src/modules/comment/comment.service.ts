@@ -35,7 +35,33 @@ const createComment = async (authorId: string, payload: ICommentCreate) => {
 	return comment
 }
 
+const getCommentsByPostIdFromDB = async (postId: string) => {
+	const comments = await prisma.comment.findMany({
+		where: {
+			postId
+		},
+		include: {
+			author: {
+				select: {
+					id: true,
+					name: true,
+					email: true
+				}
+			},
+			post: {
+				select: {
+					id: true,
+					title: true,
+					content: true
+				}
+			}
+		}
+	})
+	return comments
+}
+
 export const CommentService = {
 	getAllByAuthorId: getCommentsByAuthorIdFromDB,
-	create: createComment
+	create: createComment,
+	getAllByPostId: getCommentsByPostIdFromDB
 }
