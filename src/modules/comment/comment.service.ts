@@ -2,16 +2,20 @@ import { prisma } from '@/lib/prisma.js'
 import type { ICommentCreate } from './comment.interface.js'
 
 const getCommentsByAuthorIdFromDB = async (authorId: string) => {
-	const user = await prisma.user.findUniqueOrThrow({
+	const comments = await prisma.comment.findMany({
 		where: {
-			id: authorId
+			authorId
 		},
 		include: {
-			comments: true
+			post: {
+				select: {
+					id: true,
+					title: true
+				}
+			}
 		}
 	})
 
-	const comments = user.comments
 	return comments
 }
 
