@@ -5,22 +5,35 @@ import status from 'http-status'
 /* ------------------------------------------------------------------ */
 /*  404 Not Found middleware                                          */
 /*                                                                    */
-/*  Must be registered AFTER all routes, BEFORE globalErrorHandler.   */
+/*  REQUIRED order in app.ts — wrong order = HTML error responses:    */
 /*                                                                    */
-/*  app.use(notFound)                                                 */
-/*  app.use(globalErrorHandler)                                       */
+/*    app.use('/api', routes)                                         */
+/*    app.use(notFound)         ← must be BEFORE globalErrorHandler   */
+/*    app.use(globalErrorHandler)                                     */
 /*                                                                    */
-/*  We forward to next() instead of responding directly so that       */
-/*  globalErrorHandler handles the response — keeping all error       */
-/*  formatting, logging, and Prisma handling in one place.            */
+/*  We call next(AppError) — never res.json() — so globalError        */
+/*  Handler owns the response: logging, formatting, Prisma errors     */
+/*  all stay in one place.                                            */
 /* ------------------------------------------------------------------ */
 
-const notFound = (req: Request, _res: Response, next: NextFunction): void =>
+const notFound = (req: Request, _res: Response, next: NextFunction): void => {
+	const method = req.method
+	const url = encodeURI(req.originalUrl)
+
+	// Development: expose method + url for fast debugging.
+	// Production: keep it generic — don't leak route structure.
+	const message =
+		process.env.NODE_ENV === 'production' ?
+			'The requested resource was not found.'
+		:	`${method} ${url} — route not found`
+
 	next(
-		new AppError(
-			status.NOT_FOUND,
-			`${req.method} ${encodeURI(req.originalUrl)} — route not found`
-		)
+		new AppError(status.NOT_FOUND, message, {
+			// Attach structured details for internal logging — never
+			// reaches the client, only visible in globalErrorHandler logs.
+			errors: { method, url, ip: req.ip }
+		})
 	)
+}
 
 export default notFound
