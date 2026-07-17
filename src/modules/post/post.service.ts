@@ -1,4 +1,5 @@
 import { CommentStatus, PostStatus } from '@/generated/prisma/enums.js'
+import type { PostWhereInput } from '@/generated/prisma/models.js'
 import { prisma } from '@/lib/prisma.js'
 import { AppError } from '@/utils/appError.js'
 import status from 'http-status'
@@ -19,31 +20,59 @@ const createPostIntoDB = async (payload: ICreatePost, userId: string) => {
 }
 
 const getAllPostsFromDB = async (query: IPostQueryParams) => {
+	const andConditions: PostWhereInput[] = []
+
+	if (query.searchTerm)
+		andConditions.push({
+			OR: [
+				{
+					title: {
+						contains: query.searchTerm,
+						mode: 'insensitive'
+					}
+				},
+				{
+					content: {
+						contains: query.searchTerm,
+						mode: 'insensitive'
+					}
+				}
+			]
+		})
+	if (query.title) andConditions.push({ title: query.title })
+	if (query.content) andConditions.push({ content: query.content })
+	if (query.status) andConditions.push({ status: query.status })
+	if (query.isFeatured)
+		andConditions.push({ isFeatured: Boolean(query.isFeatured) })
+	if (query.tags)
+		andConditions.push({ tags: { hasSome: JSON.parse(query.tags as string) } })
+
 	const result = await prisma.post.findMany({
 		where: {
-			AND: [
-				query.title ? { title: query.title } : {},
-				query.content ? { content: query.content } : {},
-				query.status ? { status: query.status } : {},
-				query.searchTerm ?
-					{
-						OR: [
-							{
-								title: {
-									contains: query.searchTerm,
-									mode: 'insensitive'
-								}
-							},
-							{
-								content: {
-									contains: query.searchTerm,
-									mode: 'insensitive'
-								}
-							}
-						]
-					}
-				:	{}
-			]
+			// AND: [
+			// 	query.title ? { title: query.title } : {},
+			// 	query.content ? { content: query.content } : {},
+			// 	query.status ? { status: query.status } : {},
+			// 	query.searchTerm ?
+			// 		{
+			// 			OR: [
+			// 				{
+			// 					title: {
+			// 						contains: query.searchTerm,
+			// 						mode: 'insensitive'
+			// 					}
+			// 				},
+			// 				{
+			// 					content: {
+			// 						contains: query.searchTerm,
+			// 						mode: 'insensitive'
+			// 					}
+			// 				}
+			// 			]
+			// 		}
+			// 	:	{}
+			// ]
+			AND: andConditions
 		},
 		orderBy: {
 			[query.sortBy ? query.sortBy : 'createdAt']:
