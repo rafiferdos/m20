@@ -3,6 +3,7 @@ import cors from 'cors'
 import type { Application, Request, Response } from 'express'
 import express from 'express'
 import config from './config/index.js'
+import notFound from './middlewares/notFound.js'
 import { AuthRoutes } from './modules/auth/auth.route.js'
 import { CheckerRoute } from './modules/checker/checker.route.js'
 import { CommentRoutes } from './modules/comment/comment.route.js'
@@ -41,6 +42,9 @@ app.use('/api/comments', CommentRoutes)
 
 // checker routes
 app.use('/api/checker', CheckerRoute)
+
+// handle 404 errors
+app.use(notFound)
 
 // handle errors globally
 app.use(globalErrorHandler)
