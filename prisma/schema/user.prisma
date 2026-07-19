@@ -9,9 +9,9 @@ model User {
   updatedAt    DateTime     @updatedAt
   profile      Profile?
 
-  comments      Comment[]
-  posts         Post[]
-  subscriptions Subscription?
+  comments     Comment[]
+  posts        Post[]
+  subscription Subscription?
 
   @@map("user")
 }
