@@ -8,6 +8,7 @@ import { AuthRoutes } from './modules/auth/auth.route.js'
 import { CheckerRoute } from './modules/checker/checker.route.js'
 import { CommentRoutes } from './modules/comment/comment.route.js'
 import { PostRoutes } from './modules/post/post.route.js'
+import { SubscriptionRoute } from './modules/subscription/subscription.route.js'
 import { userRoutes } from './modules/user/user.route.js'
 import globalErrorHandler from './utils/globalErrorHandler.js'
 
@@ -39,6 +40,9 @@ app.use('/api/posts', PostRoutes)
 
 // comment routes
 app.use('/api/comments', CommentRoutes)
+
+// subscription routes
+app.use('/api/subscription', SubscriptionRoute)
 
 // checker routes
 app.use('/api/checker', CheckerRoute)
