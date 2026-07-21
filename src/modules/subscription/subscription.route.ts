@@ -11,4 +11,6 @@ router.post(
 	SubscriptionController.checkout
 )
 
+router.post('/webhook', SubscriptionController.webhook)
+
 export const SubscriptionRoute: Router = router
