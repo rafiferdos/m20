@@ -11,7 +11,7 @@ const createCheckoutSession = catchAsync(
 
 		sendResponse(res, {
 			statusCode: status.OK,
-			message: 'Checkout session created successfully',
+			message: 'Checkout completed successfully',
 			data: result
 		})
 	}
