@@ -12,6 +12,6 @@ export default {
 	jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || '',
 	jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
 	app_url: process.env.APP_URL || 'http://localhost:5000',
-	STRIPE_PRODUCT_ID: process.env.STRIPE_PRODUCT_ID || '',
-	STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || ''
+	stripe_product_id: process.env.STRIPE_PRODUCT_ID || '',
+	stripe_secret_key: process.env.STRIPE_SECRET_KEY || ''
 }
