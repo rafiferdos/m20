@@ -20,9 +20,9 @@ const createCheckoutSession = catchAsync(
 const webhook = catchAsync(
 	async (req: Request, res: Response, next: NextFunction) => {
 		const sig = req.headers['stripe-signature'] as string
-    const event = req.body as Buffer
-    
-    await SubscriptionService.webhook(event, sig)
+		const event = req.body as Buffer
+
+		await SubscriptionService.webhook(event, sig)
 
 		sendResponse(res, {
 			statusCode: status.OK,
