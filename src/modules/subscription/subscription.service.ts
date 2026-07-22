@@ -83,7 +83,7 @@ const stripeWebhookHandler = async (payload: Buffer, sig: string) => {
 	}
 }
 
-const getSubscriptionStatus = async (userId: string) => {
+const getSubscriptionStatusFromDB = async (userId: string) => {
 	const isSubscriptionExists = await prisma.subscription.findUniqueOrThrow({
 		where: {
 			userId
@@ -103,5 +103,5 @@ const getSubscriptionStatus = async (userId: string) => {
 export const SubscriptionService = {
 	create: createSubscriptionSession,
 	webhook: stripeWebhookHandler,
-	getStatus: getSubscriptionStatus
+	getStatus: getSubscriptionStatusFromDB
 }
