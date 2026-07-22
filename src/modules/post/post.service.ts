@@ -47,6 +47,10 @@ const getAllPostsFromDB = async (query: IPostQueryParams) => {
 	if (query.tags)
 		andConditions.push({ tags: { hasSome: JSON.parse(query.tags as string) } })
 
+	andConditions.push({
+		isPremium: false
+	})
+
 	const result = await prisma.post.findMany({
 		where: {
 			// AND: [
