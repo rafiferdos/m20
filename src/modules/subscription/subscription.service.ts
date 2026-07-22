@@ -69,21 +69,39 @@ const stripeWebhookHandler = async (payload: Buffer, sig: string) => {
 			await handleChangeSubscription(subscription)
 			break
 
-case 'customer.subscription.deleted':
-  try {
-    const deletedSubscription = event.data.object as Stripe.Subscription
-    await handleChangeSubscription(deletedSubscription)
-  } catch (error) {
-    console.error("Error in deleted subscription handler:", error)
-  }
-  break
+		case 'customer.subscription.deleted':
+			try {
+				const deletedSubscription = event.data.object as Stripe.Subscription
+				await handleChangeSubscription(deletedSubscription)
+			} catch (error) {
+				console.error('Error in deleted subscription handler:', error)
+			}
+			break
 
 		default:
 			console.log(`Unhandled event type ${event.type}`)
 	}
 }
 
+const getSubscriptionStatus = async (userId: string) => {
+	const isSubscriptionExists = await prisma.subscription.findUniqueOrThrow({
+		where: {
+			userId
+		}
+	})
+	const isActive =
+		isSubscriptionExists.subscriptionStatus === 'ACTIVE' &&
+		isSubscriptionExists.currentPeriodEnd &&
+		new Date(isSubscriptionExists.currentPeriodEnd) > new Date()
+	return {
+		status: isSubscriptionExists.subscriptionStatus,
+		isSubscribed: isActive,
+		currentPeriodEnd: isSubscriptionExists.currentPeriodEnd
+	}
+}
+
 export const SubscriptionService = {
 	create: createSubscriptionSession,
-	webhook: stripeWebhookHandler
+	webhook: stripeWebhookHandler,
+	getStatus: getSubscriptionStatus
 }
