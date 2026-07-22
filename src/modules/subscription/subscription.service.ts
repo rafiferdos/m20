@@ -1,6 +1,11 @@
 import config from '@/config/index.js'
 import { prisma } from '@/lib/prisma.js'
 import { stripe } from '@/lib/stripe.js'
+import type Stripe from 'stripe'
+import {
+	handleChangeSubscription,
+	handleCheckoutCompleted
+} from './subscription.utils.js'
 
 const createSubscriptionSession = async (userId: string) => {
 	const transactionResult = await prisma.$transaction(async (tx) => {
@@ -47,4 +52,34 @@ const createSubscriptionSession = async (userId: string) => {
 	}
 }
 
-export const SubscriptionService = { create: createSubscriptionSession }
+const stripeWebhookHandler = async (payload: Buffer, sig: string) => {
+	const endPointSecret = config.stripe_webhook_secret
+	const event = stripe.webhooks.constructEvent(payload, sig, endPointSecret)
+
+	//handle the event
+	switch (event.type) {
+		case 'checkout.session.completed':
+			const session = event.data.object as Stripe.Checkout.Session
+			await handleCheckoutCompleted(session)
+
+			break
+
+		case 'customer.subscription.updated':
+			const subscription = event.data.object
+			await handleChangeSubscription(subscription)
+			break
+
+		case 'customer.subscription.deleted':
+			const deletedSubscription = event.data.object
+			await handleChangeSubscription(deletedSubscription)
+			break
+
+		default:
+			console.log(`Unhandled event type ${event.type}`)
+	}
+}
+
+export const SubscriptionService = {
+	create: createSubscriptionSession,
+	webhook: stripeWebhookHandler
+}
