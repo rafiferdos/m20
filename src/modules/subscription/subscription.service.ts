@@ -69,10 +69,14 @@ const stripeWebhookHandler = async (payload: Buffer, sig: string) => {
 			await handleChangeSubscription(subscription)
 			break
 
-		case 'customer.subscription.deleted':
-			const deletedSubscription = event.data.object
-			await handleChangeSubscription(deletedSubscription)
-			break
+case 'customer.subscription.deleted':
+  try {
+    const deletedSubscription = event.data.object as Stripe.Subscription
+    await handleChangeSubscription(deletedSubscription)
+  } catch (error) {
+    console.error("Error in deleted subscription handler:", error)
+  }
+  break
 
 		default:
 			console.log(`Unhandled event type ${event.type}`)
