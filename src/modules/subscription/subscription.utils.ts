@@ -53,15 +53,18 @@ const handleChangeSubscription = async (subscription: Stripe.Subscription) => {
 		: subscription.status === 'trialing' ? SubscriptionStatus.ACTIVE
 		: subscription.status === 'canceled' ? SubscriptionStatus.CANCELED
 		: SubscriptionStatus.EXPIRED
+
 	const currentPeriodEnd = subscription.items.data?.[0]?.current_period_end
 	const inMiliSeconds = currentPeriodEnd ? currentPeriodEnd * 1000 : null
 	const currentPeriodEndDate = inMiliSeconds ? new Date(inMiliSeconds) : null
 
-	const isSubscriptionExists = await prisma.subscription.findUniqueOrThrow({
+	// findUniqueOrThrow এর বদলে findUnique ব্যবহার করুন, যাতে error throw না করে
+	const isSubscriptionExists = await prisma.subscription.findUnique({
 		where: {
 			stripeSubscriptionId
 		}
 	})
+
 	if (!isSubscriptionExists) {
 		console.log(
 			'Subscription not found for stripeSubscriptionId:',
@@ -69,15 +72,16 @@ const handleChangeSubscription = async (subscription: Stripe.Subscription) => {
 		)
 		return
 	}
+
 	await prisma.subscription.update({
 		where: {
 			stripeSubscriptionId
 		},
 		data: {
 			subscriptionStatus,
-			currentPeriodEndDate
+			// ✅ Variable টিকে সঠিক Prisma property তে ম্যাপ করে দিন
+			currentPeriodEnd: currentPeriodEndDate as Date
 		}
 	})
 }
-
 export { handleChangeSubscription, handleCheckoutCompleted }
