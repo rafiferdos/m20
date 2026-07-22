@@ -18,6 +18,11 @@ const createPostIntoDB = async (payload: ICreatePost, userId: string) => {
 			subscription: true
 		}
 	})
+	if (payload.isPremium && user?.subscription?.subscriptionStatus !== 'ACTIVE')
+		throw new AppError(
+			status.FORBIDDEN,
+			'You need an active subscription to create premium content'
+		)
 
 	const result = await prisma.post.create({
 		data: {
