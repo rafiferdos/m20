@@ -10,6 +10,15 @@ import type {
 } from './post.interface.js'
 
 const createPostIntoDB = async (payload: ICreatePost, userId: string) => {
+	const user = await prisma.user.findUnique({
+		where: {
+			id: userId
+		},
+		include: {
+			subscription: true
+		}
+	})
+
 	const result = await prisma.post.create({
 		data: {
 			...payload,
