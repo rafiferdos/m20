@@ -137,7 +137,8 @@ const getOnePostFromDB = async (postId: string) => {
 	const transactionResult = await prisma.$transaction(async (tx) => {
 		await tx.post.update({
 			where: {
-				id: postId
+				id: postId,
+				isPremium: false
 			},
 			data: {
 				views: {
